@@ -7,5 +7,5 @@ Link from original tutorial: https://courses.cs.washington.edu/courses/cse446/18
 ## Running the application
 
 ```bash
-python -m app
+python -m flask run
 ```
