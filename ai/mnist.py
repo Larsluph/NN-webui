@@ -166,7 +166,7 @@ def get_prediction(image_tensor):
         return predicted.item()
 
 
-def run_model(img_bytes: io.BytesIO):
+def run_model(img_bytes: bytes):
     img_tensor = transform_image(img_bytes)
     return get_prediction(img_tensor)
 
@@ -175,11 +175,3 @@ def run_model(img_bytes: io.BytesIO):
     # 1: # of channels (1 for greyscale images)
     # (28, 28): input image size
     # return model(tensor)
-
-
-if __name__ == '__main__':
-    # train_and_save_model(save_model=True)
-    # TODO: create tensor from input image
-    # run_model(sys.argv[1:])
-    output = run_model(torch.ones([64, 1, 28, 28], dtype=torch.float32))
-    print(output)

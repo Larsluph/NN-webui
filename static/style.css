@@ -59,3 +59,7 @@ input[type="submit"]:hover {
 canvas {
   border: 1px solid black;
 }
+
+.canvas-actions {
+  margin-top: 24px;
+}
