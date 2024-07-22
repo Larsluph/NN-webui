@@ -3,23 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Static Webpage with Form</title>
+    <title>MNIST inference WebUI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Welcome to the Static Webpage</h1>
-    <p>This is a sample static webpage served by Flask.</p>
-    <form action="/" method="POST">
-        <label for="input_layer">Input layer size:</label>
-        <input type="number" id="input_layer" name="input_layer"><br><br>
-
-        <label for="hidden_layer">Hidden layer size:</label>
-        <input type="number" id="hidden_layer" name="hidden_layer"><br><br>
-
-        <label for="output_layer">Output layer size:</label>
-        <input type="number" id="output_layer" name="output_layer"><br><br>
-
+    <h1>MNIST inference WebUI</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flashes">
+          {% for message in messages %}
+            <div>{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    <form action="/" method="POST" enctype="multipart/form-data">
+        <label for="image">Image:</label>
+        <input type="file" id="image" name="image" required><br><br>
         <input type="submit" value="Submit">
     </form>
+
+    {% if prediction %}
+      <h2>Prediction: {{ prediction }}</h2>
+    {% endif %}
 </body>
 </html>

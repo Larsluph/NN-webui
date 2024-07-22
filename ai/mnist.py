@@ -1,9 +1,14 @@
+import io
+
 import torch
+from PIL import Image
 from torch import nn
 from torch import optim
 from torch.nn import functional as F
 from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms
+
+MODEL_PATH = r"data\mnist_cnn.pt"
 
 
 class Net(nn.Module):
@@ -68,17 +73,17 @@ def test(model, device, test_loader):
         100. * correct / len(test_loader.dataset)))
 
 
-def main(batch_size: int = 64,
-         test_batch_size: int = 1000,
-         epochs: int = 14,
-         learning_rate: float = 1.,
-         gamma: float = .7,
-         no_cuda: bool = False,
-         no_mps: bool = False,
-         dry_run: bool = False,
-         seed: int = 1,
-         log_interval: int = 10,
-         save_model: bool = False):
+def train_and_save_model(batch_size: int = 64,
+                         test_batch_size: int = 1000,
+                         epochs: int = 14,
+                         learning_rate: float = 1.,
+                         gamma: float = .7,
+                         no_cuda: bool = False,
+                         no_mps: bool = False,
+                         dry_run: bool = False,
+                         seed: int = 1,
+                         log_interval: int = 10,
+                         save_model: bool = False):
     """
     @param batch_size: input batch size for training (default: 64)
     @param test_batch_size: input batch size for testing (default: 1000)
@@ -99,10 +104,13 @@ def main(batch_size: int = 64,
     torch.manual_seed(seed)
 
     if use_cuda:
+        print("Using cuda")
         device = torch.device("cuda")
     elif use_mps:
+        print("Using mps")
         device = torch.device("mps")
     else:
+        print("Using cpu")
         device = torch.device("cpu")
 
     train_kwargs = {'batch_size': batch_size}
@@ -133,8 +141,45 @@ def main(batch_size: int = 64,
         scheduler.step()
 
     if save_model:
-        torch.save(model.state_dict(), "mnist_cnn.pt")
+        torch.save(model.state_dict(), MODEL_PATH)
+
+
+def transform_image(image_bytes):
+    transform = transforms.Compose([
+        transforms.Grayscale(),
+        transforms.Resize((28, 28)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+    image = Image.open(io.BytesIO(image_bytes))
+    return transform(image).unsqueeze(0)
+
+
+def get_prediction(image_tensor):
+    model = Net()
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
+    model.eval()
+
+    with torch.no_grad():
+        outputs = model(image_tensor)
+        _, predicted = outputs.max(1)
+        return predicted.item()
+
+
+def run_model(img_bytes: io.BytesIO):
+    img_tensor = transform_image(img_bytes)
+    return get_prediction(img_tensor)
+
+    # Run inference with input of size [64, 1, 28, 28]
+    # 64: batch size
+    # 1: # of channels (1 for greyscale images)
+    # (28, 28): input image size
+    # return model(tensor)
 
 
 if __name__ == '__main__':
-    main(save_model=True)
+    # train_and_save_model(save_model=True)
+    # TODO: create tensor from input image
+    # run_model(sys.argv[1:])
+    output = run_model(torch.ones([64, 1, 28, 28], dtype=torch.float32))
+    print(output)
