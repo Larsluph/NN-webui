@@ -1,14 +1,15 @@
 import io
+from os.path import join
 
 import torch
 from PIL import Image
 from torch import nn
 from torch import optim
-from torch.nn import functional as F
+from torch.nn import functional as func
 from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms
 
-MODEL_PATH = r"data\mnist_cnn.pt"
+MODEL_PATH = join("data", "mnist_cnn.pt")
 
 
 class Net(nn.Module):
@@ -23,17 +24,17 @@ class Net(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
-        x = F.relu(x)
+        x = func.relu(x)
         x = self.conv2(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
+        x = func.relu(x)
+        x = func.max_pool2d(x, 2)
         x = self.dropout1(x)
         x = torch.flatten(x, 1)
         x = self.fc1(x)
-        x = F.relu(x)
+        x = func.relu(x)
         x = self.dropout2(x)
         x = self.fc2(x)
-        output = F.log_softmax(x, dim=1)
+        output = func.log_softmax(x, dim=1)
         return output
 
 
@@ -43,7 +44,7 @@ def train(model, device, train_loader, optimizer, epoch, dry_run, log_interval):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
+        loss = func.nll_loss(output, target)
         loss.backward()
         optimizer.step()
         if batch_idx % log_interval == 0:
@@ -62,7 +63,7 @@ def test(model, device, test_loader):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+            test_loss += func.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
             pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
 
@@ -145,12 +146,13 @@ def train_and_save_model(batch_size: int = 64,
 
 
 def transform_image(image_bytes):
-    transform = transforms.Compose([
-        transforms.Grayscale(),
-        transforms.Resize((28, 28)),
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
+    # transform = transforms.Compose([
+    #     transforms.Grayscale(),
+    #     transforms.Resize((28, 28)),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.1307,), (0.3081,))
+    # ])
+    # return transform(white_image).unsqueeze(0)
     image = Image.open(io.BytesIO(image_bytes))
     white_image = Image.new("RGBA", image.size, (255, 255, 255))
     white_image.paste(image, mask=image)
@@ -160,7 +162,6 @@ def transform_image(image_bytes):
     tensor = transforms.ToTensor()(scaled)
     normalized = transforms.Normalize((0.1307,), (0.3081,))(tensor)
     return normalized.unsqueeze(0)
-    # return transform(white_image).unsqueeze(0)
 
 
 def get_prediction(image_tensor):
