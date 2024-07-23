@@ -152,7 +152,15 @@ def transform_image(image_bytes):
         transforms.Normalize((0.1307,), (0.3081,))
     ])
     image = Image.open(io.BytesIO(image_bytes))
-    return transform(image).unsqueeze(0)
+    white_image = Image.new("RGBA", image.size, (255, 255, 255))
+    white_image.paste(image, mask=image)
+
+    gray = transforms.Grayscale()(white_image)
+    scaled = transforms.Resize((28, 28))(gray)
+    tensor = transforms.ToTensor()(scaled)
+    normalized = transforms.Normalize((0.1307,), (0.3081,))(tensor)
+    return normalized.unsqueeze(0)
+    # return transform(white_image).unsqueeze(0)
 
 
 def get_prediction(image_tensor):
@@ -175,3 +183,7 @@ def run_model(img_bytes: bytes):
     # 1: # of channels (1 for greyscale images)
     # (28, 28): input image size
     # return model(tensor)
+
+
+if __name__ == '__main__':
+    train_and_save_model(save_model=True)

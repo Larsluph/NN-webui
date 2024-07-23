@@ -1,77 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MNIST inference WebUI</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MNIST inference WebUI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>MNIST inference WebUI</h1>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flashes">
-          {% for message in messages %}
-            <div>{{ message }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+  <h1>MNIST inference WebUI</h1>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flashes">
+        {% for message in messages %}
+          <div>{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-    <div class="canvas-container">
-      <canvas id="canvas" width="300" height="300"></canvas>
-    </div>
+  <div class="canvas-container">
+    <canvas id="canvas" width="300" height="300"></canvas>
+  </div>
 
-    <div class="canvas-actions">
-      <button onclick="clearCanvas()">Clear</button>
-      <button onclick="submitCanvas()">Submit</button>
-    </div>
+  <div class="canvas-actions">
+    <button onclick="clearCanvas()">Clear</button>
+    <button onclick="submitCanvas()">Submit</button>
+  </div>
 
-    <h2 id="prediction"></h2>
+  <h2 id="prediction"></h2>
 </body>
-
-<script>
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  let drawing = false;
-
-  canvas.addEventListener('mousedown', event => {
-    drawing = true
-    ctx.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop)
-  });
-  canvas.addEventListener('mouseup', () => drawing = false);
-  canvas.addEventListener('mousemove', draw);
-
-  function draw(event) {
-    if (!drawing) return;
-    ctx.lineWidth = 10;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = 'black';
-
-    ctx.lineTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
-  }
-
-  function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
-  function submitCanvas() {
-    const dataUrl = canvas.toDataURL('image/png');
-    fetch('/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ image: dataUrl })
-    })
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('prediction').innerText = `Prediction: ${data.prediction}`;
-        console.log('Prediction:', data.prediction);
-      });
-  }
-</script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 </html>
